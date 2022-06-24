@@ -12,7 +12,7 @@ using System;
 using LocalGovImsApiClient.Model;
 using Application.Data;
 
-namespace Application.Commands.ProcessUncapturedRefunds
+namespace Application.Commands
 {
     public class ProcessUncapturedRefundsCommand : IRequest<ProcessUncapturedRefundsCommandResult>
     {
@@ -70,7 +70,7 @@ namespace Application.Commands.ProcessUncapturedRefunds
 
         private async Task GetRefundTransactions()
         {
-           _uncapturedRefundsPayments = (await _paymentRepository.List(x => x.PaymentId != null && x.Finished != true)).Data;
+           _uncapturedRefundsPayments = (await _paymentRepository.List(x => x.RefundReference != null && x.Finished != true)).Data;
         }
 
   
@@ -85,6 +85,7 @@ namespace Application.Commands.ProcessUncapturedRefunds
                 {
                     _uncapturedRefund.CardPrefix = _uncapturedCyberSourceRefunds.FirstOrDefault().CardPrefix;
                     _uncapturedRefund.CardSuffix = _uncapturedCyberSourceRefunds.FirstOrDefault().CardSuffix;
+                    _uncapturedRefund.PaymentId = _uncapturedCyberSourceRefunds.FirstOrDefault().PaymentId;
                     await ProcessUncapturedRefund();
                 }
             }
@@ -117,7 +118,7 @@ namespace Application.Commands.ProcessUncapturedRefunds
         {
             try
             {
-                _pendingTransactions = (await _pendingTransactionsApi.PendingTransactionsGetAsync(_uncapturedRefund.PaymentId)).ToList();
+                _pendingTransactions = (await _pendingTransactionsApi.PendingTransactionsGetAsync(_uncapturedRefund.Reference)).ToList();
 
                 if (_pendingTransactions == null || !_pendingTransactions.Any())
                 {
@@ -137,8 +138,8 @@ namespace Application.Commands.ProcessUncapturedRefunds
             _processPaymentModel = new ProcessPaymentModel()
             {
                 AuthResult = LocalGovIMSResults.Authorised,
-                PspReference = _uncapturedCyberSourceRefunds.FirstOrDefault().Reference,
-                MerchantReference = _uncapturedRefund.PaymentId,
+                PspReference = _uncapturedRefund.PaymentId,
+                MerchantReference = _uncapturedRefund.Reference,
                 Fee = 0,
                 CardPrefix = _uncapturedRefund.CardPrefix,
                 CardSuffix = _uncapturedRefund.CardSuffix,
@@ -148,7 +149,7 @@ namespace Application.Commands.ProcessUncapturedRefunds
 
         private async Task ProcessPayment()
         {
-            _processPaymentResponse = await _pendingTransactionsApi.PendingTransactionsProcessPaymentAsync(_uncapturedRefund.PaymentId, _processPaymentModel);
+            _processPaymentResponse = await _pendingTransactionsApi.PendingTransactionsProcessPaymentAsync(_uncapturedRefund.Reference, _processPaymentModel);
         }
 
         private async Task UpdateIntegrationStatus()

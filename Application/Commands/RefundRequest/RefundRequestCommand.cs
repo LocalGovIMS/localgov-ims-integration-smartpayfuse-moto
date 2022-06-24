@@ -50,8 +50,8 @@ namespace Application.Commands
                 Amount = request.Refund.Amount,
                 CreatedDate = DateTime.Now,
                 Identifier = Guid.NewGuid(),
-                Reference = request.Refund.Reference,
-                PaymentId = request.Refund.ImsReference
+                Reference = request.Refund.ImsReference,
+                RefundReference = request.Refund.Reference
             })).Data;
         }
 
@@ -62,7 +62,7 @@ namespace Application.Commands
 
         private async Task<bool> RequestRefund(Refund refund)
         {
-            return await _cybersourceRestApiClient.RefundPayment(refund.Reference, refund.Reference, refund.Amount);
+            return await _cybersourceRestApiClient.RefundPayment(refund.ImsReference, refund.Reference, refund.Amount);
         }
     }
 }

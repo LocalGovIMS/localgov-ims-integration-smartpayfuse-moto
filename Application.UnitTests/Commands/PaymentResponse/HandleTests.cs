@@ -88,7 +88,7 @@ namespace Application.UnitTests.Commands.PaymentResponse
         private void SetupClient(System.Net.HttpStatusCode statusCode)
         {
             _mockPendingTransactionsApi.Setup(x => x.PendingTransactionsProcessPaymentAsync(It.IsAny<string>(), It.IsAny<ProcessPaymentModel>(),0, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ProcessPaymentResponse());
+                .ReturnsAsync(new ProcessPaymentResponse() { Success = true});
         }
 
         private void SetupCommand(Dictionary<string, string> parameters, Application.Models.PaymentResponse paymentResponse)
@@ -135,6 +135,29 @@ namespace Application.UnitTests.Commands.PaymentResponse
 
             // Assert
             result.Should().BeOfType<PaymentResponseCommandResult>();
+            result.Success.Should().Be(true);
+        }
+
+        [Theory]
+        [InlineData(AuthorisationResult.Declined, "kEz1zuPyA9A7IovYcmMR5Hks/kzrCcJJA7pVAVIAWhI=")]
+        //    [InlineData("Another value", "97Y0KDL1+KEe0gTQJzQ/mBQJIj1dTsIubOwItb+Hsx0=")]
+        public async Task Handle_returns_a_DeclinedPaymentResponseModel(string authorisationResult, string merchantSignature)
+        {
+            // Arrange
+            SetupCommand(new Dictionary<string, string> {
+                { Keys.AuthorisationResult, authorisationResult },
+                { Keys.MerchantSignature, merchantSignature },
+                { Keys.PspReference, "8816281505278071" },
+                { Keys.PaymentMethod, "Card" },
+                { Keys.SigningField, "transaction_id"}
+            }, _paymentResponse);
+
+            // Act
+            var result = await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+
+            // Assert
+            result.Should().BeOfType<PaymentResponseCommandResult>();
+            result.Success.Should().Be(true);
         }
     }
 }

@@ -25,9 +25,9 @@ namespace Infrastructure.Extensions
             {
                 CreatedDate = DateTime.Now,
                 Identifier = Guid.NewGuid(),
-                Reference = result.Id,
+                Reference = result.ClientReferenceInformation.Code,
                 Amount = decimal.Parse(result.OrderInformation.AmountDetails.TotalAmount),
-                PaymentId = result.ClientReferenceInformation.Code,
+                PaymentId = result.Id,
                 CapturedDate = Convert.ToDateTime(result.SubmitTimeUtc),
                 CardPrefix = result.PaymentInformation.Card.Prefix,
                 CardSuffix = result.PaymentInformation.Card.Suffix
