@@ -1,7 +1,5 @@
 ﻿using Application.Commands;
-using Domain.Exceptions;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Collections.Generic;
 using System.Threading.Tasks;

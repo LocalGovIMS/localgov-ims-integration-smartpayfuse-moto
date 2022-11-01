@@ -96,13 +96,11 @@ namespace Application.Commands
                   var messageBytes = encoding.GetBytes(signingString);
                   var calculatedMerchantSignature = Convert.ToBase64String(hmacsha256.ComputeHash(messageBytes));
             return calculatedMerchantSignature;
-
         }
 
 
         private async Task BuildProcessPaymentModelAsync(Dictionary<string, string> paramaters)
         {
-
             switch (paramaters[Keys.AuthorisationResult])
             {
                 case AuthorisationResult.Authorised:
@@ -113,9 +111,9 @@ namespace Application.Commands
                         PspReference = paramaters.GetValueOrDefault(Keys.PspReference),
                         MerchantReference = paramaters.GetValueOrDefault(Keys.MerchantReference),
                         PaymentMethod = paramaters.GetValueOrDefault(Keys.PaymentMethod),
-                        CardPrefix = paymentCardDetails.FirstOrDefault().CardPrefix,
-                        CardSuffix = paymentCardDetails.FirstOrDefault().CardSuffix,
-                        AmountPaid = paymentCardDetails.FirstOrDefault().Amount
+                        CardPrefix = paymentCardDetails.Count == 0 ? null : paymentCardDetails.FirstOrDefault().CardPrefix,
+                        CardSuffix = paymentCardDetails.Count == 0 ? null : paymentCardDetails.FirstOrDefault().CardSuffix,
+                        AmountPaid = paymentCardDetails.Count == 0 ? 0 : paymentCardDetails.FirstOrDefault().Amount
                     };
                     break;
                 case AuthorisationResult.Declined:
@@ -162,6 +160,7 @@ namespace Application.Commands
         {
             _processPaymentResponse = await _pendingTransactionsApi.PendingTransactionsProcessPaymentAsync(_processPaymentModel.MerchantReference, _processPaymentModel);
         }
+
         private void BuildResult()
         {
             _result = new PaymentResponseCommandResult()

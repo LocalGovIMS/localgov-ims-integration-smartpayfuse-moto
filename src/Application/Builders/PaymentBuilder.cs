@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using Application.Entities;
 
 namespace Application.Builders
 {
@@ -42,11 +41,10 @@ namespace Application.Builders
             _payment.OverrideCustomReceiptPage = _configuration.GetValue<string>("PaymentPortalUrl") + "/Payment/PaymentResponse";
             _payment.Currency = "GBP";
             _payment.Locale = "en";
-            _payment.BillToAddressLine1 = args.Transaction.PayeePremiseNumber + " " + args.Transaction.PayeeStreet;
-            _payment.BillToAddressCity = args.Transaction.PayeeTown;
+            _payment.BillToAddressLine1 = args.Transaction.PayeeAddressLine1;
+            _payment.BillToAddressCity = args.Transaction.PayeeAddressLine2;
             _payment.BillToAddressPostalCode = args.Transaction.PayeePostCode;
             _payment.BillToAddressCountry = "GB";
-
         }
 
         private void CreateMerchantSignature()
@@ -78,9 +76,8 @@ namespace Application.Builders
             var hmacsha256 = new HMACSHA256(keyByte);
             var messageBytes = encoding.GetBytes(signingString);
             var signature = Convert.ToBase64String(hmacsha256.ComputeHash(messageBytes));
-
             _payment.Signature = signature;
-            }
+        }
     }
 
     public class PaymentBuilderArgs

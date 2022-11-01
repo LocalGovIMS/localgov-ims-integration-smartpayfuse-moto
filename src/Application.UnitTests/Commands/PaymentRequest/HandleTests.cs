@@ -15,6 +15,7 @@ using Command = Application.Commands.PaymentRequestCommand;
 using Handler = Application.Commands.PaymentRequestCommandHandler;
 using Application.Result;
 using System;
+using LocalGovImsApiClient.Client;
 
 namespace Application.UnitTests.Commands.PaymentRequest
 {
@@ -99,11 +100,11 @@ namespace Application.UnitTests.Commands.PaymentRequest
             SetupCommand(null, "hash");
 
             // Act
-            async Task task() => await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+            async Task task() => await _commandHandler.Handle(_command, new CancellationToken());
 
             // Assert
             var result = await Assert.ThrowsAsync<PaymentException>(task);
-            result.Message.Should().Be("The reference provided is not valid");
+            result.Message.Should().Be("The reference provided is null or empty");
         }
 
         [Fact]
@@ -113,11 +114,11 @@ namespace Application.UnitTests.Commands.PaymentRequest
             SetupCommand("reference", null);
 
             // Act
-            async Task task() => await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+            async Task task() => await _commandHandler.Handle(_command, new CancellationToken());
 
             // Assert
             var result = await Assert.ThrowsAsync<PaymentException>(task);
-            result.Message.Should().Be("The reference provided is not valid");
+            result.Message.Should().Be("The hash provided is null or empty");
         }
 
         [Fact]
@@ -127,11 +128,11 @@ namespace Application.UnitTests.Commands.PaymentRequest
             SetupCommand("reference", "hash that doesn't match");
 
             // Act
-            async Task task() => await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+            async Task task() => await _commandHandler.Handle(_command, new CancellationToken());
 
             // Assert
             var result = await Assert.ThrowsAsync<PaymentException>(task);
-            result.Message.Should().Be("The reference provided is not valid");
+            result.Message.Should().Be("The hash is invalid");
         }
 
         [Fact]
@@ -183,12 +184,27 @@ namespace Application.UnitTests.Commands.PaymentRequest
         }
 
         [Fact]
+        public async Task Handle_throws_PaymentException_when_pending_transactions_returns_404_error_reference_not_found()
+        {
+            // Arrange
+            _mockPendingTransactionsApi.Setup(x => x.PendingTransactionsGetAsync(It.IsAny<string>(), 0, It.IsAny<CancellationToken>()))
+                .Throws(new ApiException(404,""));
+
+            // Act
+            async Task task() => await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+
+            // Assert
+            var result = await Assert.ThrowsAsync<PaymentException>(task);
+            result.Message.Should().Be("The reference provided is no longer a valid pending payment");
+        }
+
+        [Fact]
         public async Task Handle_returns_Payment_when_successful()
         {
             // Arrange
 
             // Act
-            var result = await _commandHandler.Handle(_command, new System.Threading.CancellationToken());
+            var result = await _commandHandler.Handle(_command, new CancellationToken());
 
             // Assert
             result.Should().BeOfType<SmartPayFusePayment>();
