@@ -42,7 +42,7 @@ namespace Application.Builders
             _payment.Currency = "GBP";
             _payment.Locale = "en";
             _payment.BillToAddressLine1 = args.Transaction.PayeeAddressLine1;
-            _payment.BillToAddressCity = args.Transaction.PayeeAddressLine2;
+            _payment.BillToAddressCity = args.Transaction.PayeeAddressLine3;
             _payment.BillToAddressPostalCode = args.Transaction.PayeePostCode;
             _payment.BillToAddressCountry = "GB";
         }
